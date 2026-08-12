@@ -50,7 +50,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/tasks', taskRoutes);
 
-app.get('/', (req, res) => {
+app.get('/', (req: any, res: any) => {
   res.send('BellyBites Cart API is running...');
 });
 

@@ -73,10 +73,10 @@ if (isS3Configured && s3ClientInstance) {
   storage = multerS3({
     s3: s3ClientInstance,
     bucket: awsBucketName as string,
-    metadata: (req, file, cb) => {
+    metadata: (req: any, file: any, cb: any) => {
       cb(null, { fieldName: file.fieldname });
     },
-    key: (req, file, cb) => {
+    key: (req: any, file: any, cb: any) => {
       const ext = path.extname(file.originalname) || '.jpg';
       const uniqueName = `bellybites/photo-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
       cb(null, uniqueName);
@@ -92,7 +92,7 @@ if (isS3Configured && s3ClientInstance) {
 
   storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: async (req, file) => {
+    params: async (req: any, file: any) => {
       return {
         folder: 'bellybites',
         format: 'png',
@@ -109,10 +109,10 @@ if (isS3Configured && s3ClientInstance) {
   }
 
   storage = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (req: any, file: any, cb: any) => {
       cb(null, uploadsDir);
     },
-    filename: (req, file, cb) => {
+    filename: (req: any, file: any, cb: any) => {
       const ext = path.extname(file.originalname) || '.jpg';
       const uniqueName = `photo-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
       cb(null, uniqueName);
