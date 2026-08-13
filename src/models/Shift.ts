@@ -25,6 +25,7 @@ export interface ITaskSubmission {
   type: 'Opening' | 'Closing';
   completed: boolean;
   photoUrl?: string;
+  inputValue?: string;
   submittedAt?: Date;
 }
 
@@ -76,6 +77,7 @@ const shiftSchema = new Schema<IShift>(
         type: { type: String, required: true, enum: ['Opening', 'Closing'] },
         completed: { type: Boolean, default: false },
         photoUrl: { type: String },
+        inputValue: { type: String },
         submittedAt: { type: Date, default: Date.now },
       },
     ],

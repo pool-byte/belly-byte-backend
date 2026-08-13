@@ -24,7 +24,7 @@ export const getTasks = async (req: Request, res: Response): Promise<void> => {
 // @access  Private/Admin
 export const createTask = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { title, type, requiresPhoto } = req.body;
+    const { title, type, requiresPhoto, requiresInput, inputLabel } = req.body;
 
     if (!title || !type) {
       res.status(400).json({ message: 'Title and type (Opening/Closing) are required.' });
@@ -35,6 +35,8 @@ export const createTask = async (req: AuthRequest, res: Response): Promise<void>
       title,
       type,
       requiresPhoto: requiresPhoto ?? true,
+      requiresInput: Boolean(requiresInput),
+      inputLabel: inputLabel ? String(inputLabel).trim() : '',
       active: true,
     });
 
