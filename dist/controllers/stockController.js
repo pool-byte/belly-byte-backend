@@ -11,6 +11,7 @@ const Item_1 = __importDefault(require("../models/Item"));
 const Shift_1 = __importDefault(require("../models/Shift"));
 const Alert_1 = __importDefault(require("../models/Alert"));
 const uploadMiddleware_1 = require("../middleware/uploadMiddleware");
+const notificationService_1 = require("../services/notificationService");
 // @desc    Record Opening Stock (bulk or single for shift)
 // @route   POST /api/stock/opening
 // @access  Private
@@ -138,18 +139,24 @@ const recordWastage = async (req, res) => {
         }
         rawMaterial.currentQuantity = rawMaterial.currentQuantity - Number(quantity);
         await rawMaterial.save();
-        // Check if stock dropped below threshold
-        if (rawMaterial.currentQuantity <= rawMaterial.minStockAlert) {
+        // Check if cart stock dropped below refill threshold
+        const cartThreshold = rawMaterial.minCartStockAlert ?? rawMaterial.minStockAlert ?? 0;
+        if (rawMaterial.currentQuantity <= cartThreshold) {
             const existingAlert = await Alert_1.default.findOne({
                 itemId: rawMaterial._id,
                 type: 'LOW_STOCK_THRESHOLD',
                 resolved: false,
             });
             if (!existingAlert) {
+                const alertMsg = `CART REFILL ALERT: ${rawMaterial.name} is down to ${rawMaterial.currentQuantity.toFixed(3)} ${rawMaterial.unit} after wastage (Cart Threshold: ${cartThreshold} ${rawMaterial.unit}). Please refill cart.`;
                 await Alert_1.default.create({
                     itemId: rawMaterial._id,
                     type: 'LOW_STOCK_THRESHOLD',
-                    message: `LOW STOCK ALERT: ${rawMaterial.name} is down to ${rawMaterial.currentQuantity.toFixed(3)} ${rawMaterial.unit} after wastage (Threshold: ${rawMaterial.minStockAlert} ${rawMaterial.unit}).`,
+                    message: alertMsg,
+                });
+                (0, notificationService_1.sendAdminPushNotification)('⚠️ Cart Refill Alert (Wastage)', alertMsg, {
+                    itemId: rawMaterial._id,
+                    type: 'LOW_STOCK_THRESHOLD',
                 });
             }
         }

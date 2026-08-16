@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getShiftReportById = exports.getShiftReports = exports.getSalesMismatchesReport = exports.getDailyClosingReport = exports.getSevenDayAvgUsageReport = exports.getExpectedClosingStockReport = exports.getUsedStockReport = exports.getHourlyStockReport = exports.getDailySalesReport = exports.getHourlySalesReport = void 0;
+exports.updateStocksToBuyReport = exports.getStocksToBuyReport = exports.getShiftReportById = exports.getShiftReports = exports.getSalesMismatchesReport = exports.getDailyClosingReport = exports.getSevenDayAvgUsageReport = exports.getExpectedClosingStockReport = exports.getUsedStockReport = exports.getHourlyStockReport = exports.getDailySalesReport = exports.getHourlySalesReport = void 0;
 const Item_1 = __importDefault(require("../models/Item"));
 const Sale_1 = __importDefault(require("../models/Sale"));
 const StockUpdate_1 = __importDefault(require("../models/StockUpdate"));
@@ -354,4 +354,109 @@ const getShiftReportById = async (req, res) => {
     }
 };
 exports.getShiftReportById = getShiftReportById;
+// 11. Get Stocks to Buy (End of Shift Shopping List)
+// @route GET /api/reports/stocks-to-buy
+const getStocksToBuyReport = async (req, res) => {
+    try {
+        // Find the latest shift report
+        const latestReport = await ShiftReport_1.default.findOne({}).sort({ closedAt: -1 });
+        let shoppingList = [];
+        let reportId = null;
+        let shiftInfo = null;
+        if (latestReport) {
+            reportId = latestReport._id.toString();
+            shiftInfo = {
+                shiftId: latestReport.shiftId,
+                workerName: latestReport.workerName,
+                closedAt: latestReport.closedAt,
+                dateString: latestReport.dateString,
+            };
+            if (Array.isArray(latestReport.shoppingList) && latestReport.shoppingList.length > 0) {
+                shoppingList = latestReport.shoppingList;
+            }
+        }
+        // Fallback: If no shopping list exists in latest report, evaluate current live items against inventory threshold
+        if (shoppingList.length === 0) {
+            const items = await Item_1.default.find({}).sort({ category: 1, name: 1 });
+            items.forEach((item) => {
+                const minInventoryAlert = item.minInventoryStockAlert ?? item.minStockAlert ?? 0;
+                if (item.currentQuantity <= minInventoryAlert) {
+                    const targetBuffer = minInventoryAlert > 0 ? minInventoryAlert * 3 : 5;
+                    const suggestedQty = Math.max(0, targetBuffer - item.currentQuantity);
+                    const qtyToBuy = Number(suggestedQty.toFixed(2));
+                    const estCost = item.unitPrice || 0;
+                    shoppingList.push({
+                        itemId: item._id,
+                        name: item.name,
+                        unit: item.unit,
+                        closingStock: Number(item.currentQuantity.toFixed(3)),
+                        minStockAlert: minInventoryAlert,
+                        suggestedQuantity: qtyToBuy,
+                        quantityToBuy: qtyToBuy,
+                        unitCost: estCost,
+                        totalCost: Number((qtyToBuy * estCost).toFixed(2)),
+                        vendorName: item.preferredSupplier || '',
+                        status: 'Pending',
+                    });
+                }
+            });
+        }
+        const totalEstimatedCost = shoppingList.reduce((acc, item) => acc + (item.totalCost || 0), 0);
+        res.json({
+            reportId,
+            shiftInfo,
+            shoppingList,
+            totalEstimatedCost: Number(totalEstimatedCost.toFixed(2)),
+            itemCount: shoppingList.length,
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
+exports.getStocksToBuyReport = getStocksToBuyReport;
+// 12. Update Stocks to Buy Shopping List
+// @route PUT /api/reports/stocks-to-buy/:shiftReportId
+const updateStocksToBuyReport = async (req, res) => {
+    try {
+        const { shiftReportId } = req.params;
+        const { shoppingList } = req.body;
+        const report = await ShiftReport_1.default.findById(shiftReportId);
+        if (!report) {
+            res.status(404).json({ message: 'Shift report not found' });
+            return;
+        }
+        if (Array.isArray(shoppingList)) {
+            report.shoppingList = shoppingList.map((item) => {
+                const qtyToBuy = Number(item.quantityToBuy) || 0;
+                const uCost = Number(item.unitCost) || 0;
+                return {
+                    itemId: item.itemId,
+                    name: item.name,
+                    unit: item.unit,
+                    closingStock: Number(item.closingStock) || 0,
+                    minStockAlert: Number(item.minStockAlert) || 0,
+                    suggestedQuantity: Number(item.suggestedQuantity) || 0,
+                    quantityToBuy: qtyToBuy,
+                    unitCost: uCost,
+                    totalCost: Number((qtyToBuy * uCost).toFixed(2)),
+                    vendorName: item.vendorName || '',
+                    status: item.status || 'Pending',
+                };
+            });
+        }
+        await report.save();
+        const totalEstimatedCost = report.shoppingList.reduce((acc, item) => acc + (item.totalCost || 0), 0);
+        res.json({
+            message: 'Shopping list updated successfully',
+            reportId: report._id,
+            shoppingList: report.shoppingList,
+            totalEstimatedCost: Number(totalEstimatedCost.toFixed(2)),
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
+exports.updateStocksToBuyReport = updateStocksToBuyReport;
 //# sourceMappingURL=reportController.js.map

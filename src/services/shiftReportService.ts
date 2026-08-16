@@ -115,8 +115,10 @@ export const createShiftReport = async (shiftId: string) => {
     });
   });
 
-  // 5. Build Stock Summary (Initial + Restocked = Total Available)
+  // 5. Build Stock Summary & Shopping List for Items Low on Stock
   const allMasterItems = await Item.find({});
+  const shoppingList: any[] = [];
+
   const stockSummary = allMasterItems.map((item) => {
     const iId = item._id.toString();
     const openingStock = openingMap[iId] !== undefined ? openingMap[iId] : item.startingQuantity || 0;
@@ -125,6 +127,29 @@ export const createShiftReport = async (shiftId: string) => {
     const recipeConsumption = rawMaterialUsageMap[iId]?.quantityUsed || 0;
     const wastage = wastageMap[iId] || 0;
     const expectedClosing = totalAvailable - recipeConsumption - wastage;
+    const minInventoryAlert = item.minInventoryStockAlert ?? item.minStockAlert ?? 0;
+
+    // Auto-generate shopping list item if closing stock is low vs inventory threshold
+    if (expectedClosing <= minInventoryAlert) {
+      const targetBuffer = minInventoryAlert > 0 ? minInventoryAlert * 3 : 5;
+      const suggestedQty = Math.max(0, targetBuffer - expectedClosing);
+      const qtyToBuy = Number(suggestedQty.toFixed(2));
+      const estCost = (item as any).unitPrice || 0;
+
+      shoppingList.push({
+        itemId: item._id,
+        name: item.name,
+        unit: item.unit,
+        closingStock: Number(expectedClosing.toFixed(3)),
+        minStockAlert: minInventoryAlert,
+        suggestedQuantity: qtyToBuy,
+        quantityToBuy: qtyToBuy,
+        unitCost: estCost,
+        totalCost: Number((qtyToBuy * estCost).toFixed(2)),
+        vendorName: (item as any).preferredSupplier || '',
+        status: 'Pending',
+      });
+    }
 
     return {
       itemId: item._id,
@@ -153,6 +178,7 @@ export const createShiftReport = async (shiftId: string) => {
       rawMaterialUsed,
       stockSummary,
       materialWasted: materialWastedList,
+      shoppingList,
       totalRevenue,
       livePhotoUrl: shift.cartLiveChecklist?.livePhotoUrl || '',
       closingPhotoUrl: shift.closingChecklist?.closingPhotoUrl || '',

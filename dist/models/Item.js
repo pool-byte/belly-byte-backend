@@ -39,6 +39,8 @@ const itemSchema = new mongoose_1.Schema({
     category: { type: String, required: true, default: 'Ingredient' },
     unit: { type: String, required: true, default: 'kg' },
     minStockAlert: { type: Number, required: true, default: 0 },
+    minCartStockAlert: { type: Number, default: 0 },
+    minInventoryStockAlert: { type: Number, default: 0 },
     currentQuantity: { type: Number, required: true, default: 0 },
     startingQuantity: { type: Number, required: true, default: 0 },
 }, { timestamps: true });

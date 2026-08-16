@@ -38,6 +38,8 @@ const taskMasterSchema = new mongoose_1.Schema({
     title: { type: String, required: true },
     type: { type: String, required: true, enum: ['Opening', 'Closing'] },
     requiresPhoto: { type: Boolean, default: true },
+    requiresInput: { type: Boolean, default: false },
+    inputLabel: { type: String },
     active: { type: Boolean, default: true },
 }, { timestamps: true });
 const TaskMaster = mongoose_1.default.model('TaskMaster', taskMasterSchema);

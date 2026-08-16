@@ -10,7 +10,7 @@ export interface IWastage extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
-declare const Wastage: mongoose.Model<IWastage, {}, {}, {}, Document<unknown, {}, IWastage, {}, mongoose.DefaultSchemaOptions> & IWastage & Required<{
+declare const Wastage: mongoose.Model<IWastage, {}, {}, {}, mongoose.Document<unknown, {}, IWastage, {}, mongoose.DefaultSchemaOptions> & IWastage & Required<{
     _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;

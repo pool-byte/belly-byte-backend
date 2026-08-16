@@ -8,7 +8,7 @@ export interface IAlert extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
-declare const Alert: mongoose.Model<IAlert, {}, {}, {}, Document<unknown, {}, IAlert, {}, mongoose.DefaultSchemaOptions> & IAlert & Required<{
+declare const Alert: mongoose.Model<IAlert, {}, {}, {}, mongoose.Document<unknown, {}, IAlert, {}, mongoose.DefaultSchemaOptions> & IAlert & Required<{
     _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;

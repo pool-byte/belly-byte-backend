@@ -10,7 +10,7 @@ export interface IStockUpdate extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
-declare const StockUpdate: mongoose.Model<IStockUpdate, {}, {}, {}, Document<unknown, {}, IStockUpdate, {}, mongoose.DefaultSchemaOptions> & IStockUpdate & Required<{
+declare const StockUpdate: mongoose.Model<IStockUpdate, {}, {}, {}, mongoose.Document<unknown, {}, IStockUpdate, {}, mongoose.DefaultSchemaOptions> & IStockUpdate & Required<{
     _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;

@@ -22,6 +22,7 @@ export interface ITaskSubmission {
     type: 'Opening' | 'Closing';
     completed: boolean;
     photoUrl?: string;
+    inputValue?: string;
     submittedAt?: Date;
 }
 export interface IShift extends Document {
@@ -39,7 +40,7 @@ export interface IShift extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
-declare const Shift: mongoose.Model<IShift, {}, {}, {}, Document<unknown, {}, IShift, {}, mongoose.DefaultSchemaOptions> & IShift & Required<{
+declare const Shift: mongoose.Model<IShift, {}, {}, {}, mongoose.Document<unknown, {}, IShift, {}, mongoose.DefaultSchemaOptions> & IShift & Required<{
     _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;

@@ -9,4 +9,6 @@ export declare const getDailyClosingReport: (req: Request, res: Response) => Pro
 export declare const getSalesMismatchesReport: (req: Request, res: Response) => Promise<void>;
 export declare const getShiftReports: (req: Request, res: Response) => Promise<void>;
 export declare const getShiftReportById: (req: Request, res: Response) => Promise<void>;
+export declare const getStocksToBuyReport: (req: Request, res: Response) => Promise<void>;
+export declare const updateStocksToBuyReport: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=reportController.d.ts.map

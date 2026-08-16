@@ -91,8 +91,37 @@ export const getUserProfile = async (req: AuthRequest, res: Response): Promise<v
       name: req.user.name,
       phone: req.user.phone,
       role: req.user.role,
+      pushToken: req.user.pushToken,
     });
   } catch (error) {
     res.status(500).json({ message: 'Server Error', error });
   }
 };
+
+// @desc    Save or update user's Expo push token
+// @route   POST /api/auth/push-token
+// @access  Private
+export const updatePushToken = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { pushToken } = req.body;
+    if (!req.user) {
+      res.status(401).json({ message: 'Not authorized' });
+      return;
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    user.pushToken = pushToken || '';
+    await user.save();
+
+    console.log(`[AUTH] Push token registered for user "${user.name}" (${user.role}): ${pushToken}`);
+    res.json({ message: 'Push token registered successfully', pushToken: user.pushToken });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error saving push token', error });
+  }
+};
+

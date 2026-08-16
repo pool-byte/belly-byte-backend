@@ -65,6 +65,7 @@ const shiftSchema = new mongoose_1.Schema({
             type: { type: String, required: true, enum: ['Opening', 'Closing'] },
             completed: { type: Boolean, default: false },
             photoUrl: { type: String },
+            inputValue: { type: String },
             submittedAt: { type: Date, default: Date.now },
         },
     ],

@@ -19,6 +19,8 @@ router.get('/daily-closing', authMiddleware_1.protect, authMiddleware_1.admin, r
 router.get('/mismatches', authMiddleware_1.protect, authMiddleware_1.admin, reportController_1.getSalesMismatchesReport);
 router.get('/shift-status', authMiddleware_1.protect, authMiddleware_1.admin, shiftController_1.getShiftStatusAndPhotos);
 router.get('/alerts', authMiddleware_1.protect, authMiddleware_1.admin, alertController_1.getAlerts);
+router.get('/stocks-to-buy', authMiddleware_1.protect, authMiddleware_1.admin, reportController_1.getStocksToBuyReport);
+router.put('/stocks-to-buy/:shiftReportId', authMiddleware_1.protect, authMiddleware_1.admin, reportController_1.updateStocksToBuyReport);
 // Date-wise Shift Closing Reports
 router.get('/shift-reports', authMiddleware_1.protect, authMiddleware_1.admin, reportController_1.getShiftReports);
 router.get('/shift-reports/:id', authMiddleware_1.protect, authMiddleware_1.admin, reportController_1.getShiftReportById);

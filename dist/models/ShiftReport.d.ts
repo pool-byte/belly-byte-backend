@@ -32,6 +32,19 @@ export interface IMaterialWasted {
     photoUrl?: string;
     createdAt?: Date;
 }
+export interface IShoppingItem {
+    itemId: mongoose.Types.ObjectId;
+    name: string;
+    unit: string;
+    closingStock: number;
+    minStockAlert: number;
+    suggestedQuantity: number;
+    quantityToBuy: number;
+    unitCost: number;
+    totalCost: number;
+    vendorName: string;
+    status: 'Pending' | 'Ordered' | 'Delivered';
+}
 export interface IShiftReport extends Document {
     shiftId: mongoose.Types.ObjectId;
     dateString: string;
@@ -43,13 +56,14 @@ export interface IShiftReport extends Document {
     rawMaterialUsed: IRawMaterialUsed[];
     stockSummary: IStockSummary[];
     materialWasted: IMaterialWasted[];
+    shoppingList: IShoppingItem[];
     totalRevenue: number;
     livePhotoUrl?: string;
     closingPhotoUrl?: string;
     createdAt: Date;
     updatedAt: Date;
 }
-declare const ShiftReport: mongoose.Model<IShiftReport, {}, {}, {}, Document<unknown, {}, IShiftReport, {}, mongoose.DefaultSchemaOptions> & IShiftReport & Required<{
+declare const ShiftReport: mongoose.Model<IShiftReport, {}, {}, {}, mongoose.Document<unknown, {}, IShiftReport, {}, mongoose.DefaultSchemaOptions> & IShiftReport & Required<{
     _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;

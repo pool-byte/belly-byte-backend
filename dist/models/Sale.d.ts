@@ -9,7 +9,7 @@ export interface ISale extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
-declare const Sale: mongoose.Model<ISale, {}, {}, {}, Document<unknown, {}, ISale, {}, mongoose.DefaultSchemaOptions> & ISale & Required<{
+declare const Sale: mongoose.Model<ISale, {}, {}, {}, mongoose.Document<unknown, {}, ISale, {}, mongoose.DefaultSchemaOptions> & ISale & Required<{
     _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;

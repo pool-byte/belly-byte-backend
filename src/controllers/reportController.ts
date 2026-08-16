@@ -383,3 +383,119 @@ export const getShiftReportById = async (req: Request, res: Response): Promise<v
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
+// 11. Get Stocks to Buy (End of Shift Shopping List)
+// @route GET /api/reports/stocks-to-buy
+export const getStocksToBuyReport = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Find the latest shift report
+    const latestReport = await ShiftReport.findOne({}).sort({ closedAt: -1 });
+
+    let shoppingList: any[] = [];
+    let reportId: string | null = null;
+    let shiftInfo = null;
+
+    if (latestReport) {
+      reportId = (latestReport._id as any).toString();
+      shiftInfo = {
+        shiftId: latestReport.shiftId,
+        workerName: latestReport.workerName,
+        closedAt: latestReport.closedAt,
+        dateString: latestReport.dateString,
+      };
+
+      if (Array.isArray(latestReport.shoppingList) && latestReport.shoppingList.length > 0) {
+        shoppingList = latestReport.shoppingList;
+      }
+    }
+
+    // Fallback: If no shopping list exists in latest report, evaluate current live items against inventory threshold
+    if (shoppingList.length === 0) {
+      const items = await Item.find({}).sort({ category: 1, name: 1 });
+      items.forEach((item) => {
+        const minInventoryAlert = item.minInventoryStockAlert ?? item.minStockAlert ?? 0;
+        if (item.currentQuantity <= minInventoryAlert) {
+          const targetBuffer = minInventoryAlert > 0 ? minInventoryAlert * 3 : 5;
+          const suggestedQty = Math.max(0, targetBuffer - item.currentQuantity);
+          const qtyToBuy = Number(suggestedQty.toFixed(2));
+          const estCost = (item as any).unitPrice || 0;
+
+          shoppingList.push({
+            itemId: item._id,
+            name: item.name,
+            unit: item.unit,
+            closingStock: Number(item.currentQuantity.toFixed(3)),
+            minStockAlert: minInventoryAlert,
+            suggestedQuantity: qtyToBuy,
+            quantityToBuy: qtyToBuy,
+            unitCost: estCost,
+            totalCost: Number((qtyToBuy * estCost).toFixed(2)),
+            vendorName: (item as any).preferredSupplier || '',
+            status: 'Pending',
+          });
+        }
+      });
+    }
+
+    const totalEstimatedCost = shoppingList.reduce((acc, item) => acc + (item.totalCost || 0), 0);
+
+    res.json({
+      reportId,
+      shiftInfo,
+      shoppingList,
+      totalEstimatedCost: Number(totalEstimatedCost.toFixed(2)),
+      itemCount: shoppingList.length,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+// 12. Update Stocks to Buy Shopping List
+// @route PUT /api/reports/stocks-to-buy/:shiftReportId
+export const updateStocksToBuyReport = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { shiftReportId } = req.params;
+    const { shoppingList } = req.body;
+
+    const report = await ShiftReport.findById(shiftReportId);
+    if (!report) {
+      res.status(404).json({ message: 'Shift report not found' });
+      return;
+    }
+
+    if (Array.isArray(shoppingList)) {
+      report.shoppingList = shoppingList.map((item: any) => {
+        const qtyToBuy = Number(item.quantityToBuy) || 0;
+        const uCost = Number(item.unitCost) || 0;
+        return {
+          itemId: item.itemId,
+          name: item.name,
+          unit: item.unit,
+          closingStock: Number(item.closingStock) || 0,
+          minStockAlert: Number(item.minStockAlert) || 0,
+          suggestedQuantity: Number(item.suggestedQuantity) || 0,
+          quantityToBuy: qtyToBuy,
+          unitCost: uCost,
+          totalCost: Number((qtyToBuy * uCost).toFixed(2)),
+          vendorName: item.vendorName || '',
+          status: item.status || 'Pending',
+        };
+      });
+    }
+
+    await report.save();
+
+    const totalEstimatedCost = report.shoppingList.reduce((acc, item) => acc + (item.totalCost || 0), 0);
+
+    res.json({
+      message: 'Shopping list updated successfully',
+      reportId: report._id,
+      shoppingList: report.shoppingList,
+      totalEstimatedCost: Number(totalEstimatedCost.toFixed(2)),
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+

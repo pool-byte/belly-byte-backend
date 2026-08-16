@@ -11,7 +11,7 @@ export interface IFoodItem extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
-declare const FoodItem: mongoose.Model<IFoodItem, {}, {}, {}, Document<unknown, {}, IFoodItem, {}, mongoose.DefaultSchemaOptions> & IFoodItem & Required<{
+declare const FoodItem: mongoose.Model<IFoodItem, {}, {}, {}, mongoose.Document<unknown, {}, IFoodItem, {}, mongoose.DefaultSchemaOptions> & IFoodItem & Required<{
     _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;

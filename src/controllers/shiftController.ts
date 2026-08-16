@@ -3,6 +3,7 @@ import Shift from '../models/Shift';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { createShiftReport } from '../services/shiftReportService';
 import { getFilePath, resolvePhotoUrl } from '../middleware/uploadMiddleware';
+import { sendAdminPushNotification } from '../services/notificationService';
 
 // @desc    Upload a single photo file
 // @route   POST /api/shifts/upload-photo

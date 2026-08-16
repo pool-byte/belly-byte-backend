@@ -10,6 +10,8 @@ import {
   getSalesMismatchesReport,
   getShiftReports,
   getShiftReportById,
+  getStocksToBuyReport,
+  updateStocksToBuyReport,
 } from '../controllers/reportController';
 import { getShiftStatusAndPhotos } from '../controllers/shiftController';
 import { getAlerts } from '../controllers/alertController';
@@ -27,6 +29,8 @@ router.get('/daily-closing', protect, admin, getDailyClosingReport);
 router.get('/mismatches', protect, admin, getSalesMismatchesReport);
 router.get('/shift-status', protect, admin, getShiftStatusAndPhotos);
 router.get('/alerts', protect, admin, getAlerts);
+router.get('/stocks-to-buy', protect, admin, getStocksToBuyReport);
+router.put('/stocks-to-buy/:shiftReportId', protect, admin, updateStocksToBuyReport);
 
 // Date-wise Shift Closing Reports
 router.get('/shift-reports', protect, admin, getShiftReports);

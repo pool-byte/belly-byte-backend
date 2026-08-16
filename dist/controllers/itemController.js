@@ -41,7 +41,7 @@ exports.getItemById = getItemById;
 // @route   POST /api/items
 // @access  Private/Admin
 const createItem = async (req, res) => {
-    const { name, category, unit, minStockAlert, startingQuantity, currentQuantity } = req.body;
+    const { name, category, unit, minStockAlert, minCartStockAlert, minInventoryStockAlert, startingQuantity, currentQuantity } = req.body;
     try {
         const itemExists = await Item_1.default.findOne({ name });
         if (itemExists) {
@@ -53,6 +53,8 @@ const createItem = async (req, res) => {
             category: category || 'Ingredient',
             unit: unit || 'kg',
             minStockAlert: minStockAlert !== undefined ? Number(minStockAlert) : 0,
+            minCartStockAlert: minCartStockAlert !== undefined ? Number(minCartStockAlert) : (minStockAlert !== undefined ? Number(minStockAlert) : 0),
+            minInventoryStockAlert: minInventoryStockAlert !== undefined ? Number(minInventoryStockAlert) : (minStockAlert !== undefined ? Number(minStockAlert) : 0),
             startingQuantity: startingQuantity !== undefined ? Number(startingQuantity) : 0,
             currentQuantity: currentQuantity !== undefined ? Number(currentQuantity) : (startingQuantity ? Number(startingQuantity) : 0),
         });
@@ -67,14 +69,19 @@ exports.createItem = createItem;
 // @route   PUT /api/items/:id
 // @access  Private/Admin
 const updateItem = async (req, res) => {
-    const { name, category, unit, minStockAlert, startingQuantity, currentQuantity } = req.body;
+    const { name, category, unit, minStockAlert, minCartStockAlert, minInventoryStockAlert, startingQuantity, currentQuantity } = req.body;
     try {
         const item = await Item_1.default.findById(req.params.id);
         if (item) {
             item.name = name || item.name;
             item.category = category || item.category;
             item.unit = unit || item.unit;
-            item.minStockAlert = minStockAlert !== undefined ? Number(minStockAlert) : item.minStockAlert;
+            if (minStockAlert !== undefined)
+                item.minStockAlert = Number(minStockAlert);
+            if (minCartStockAlert !== undefined)
+                item.minCartStockAlert = Number(minCartStockAlert);
+            if (minInventoryStockAlert !== undefined)
+                item.minInventoryStockAlert = Number(minInventoryStockAlert);
             if (startingQuantity !== undefined)
                 item.startingQuantity = Number(startingQuantity);
             if (currentQuantity !== undefined)

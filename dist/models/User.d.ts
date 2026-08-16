@@ -4,9 +4,10 @@ export interface IUser extends Document {
     phone: string;
     password?: string;
     role: 'Admin' | 'Worker';
+    pushToken?: string;
     matchPassword(enteredPassword: string): Promise<boolean>;
 }
-declare const User: mongoose.Model<IUser, {}, {}, {}, Document<unknown, {}, IUser, {}, mongoose.DefaultSchemaOptions> & IUser & Required<{
+declare const User: mongoose.Model<IUser, {}, {}, {}, mongoose.Document<unknown, {}, IUser, {}, mongoose.DefaultSchemaOptions> & IUser & Required<{
     _id: mongoose.Types.ObjectId;
 }> & {
     __v: number;

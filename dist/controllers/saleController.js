@@ -10,6 +10,7 @@ const Item_1 = __importDefault(require("../models/Item"));
 const Alert_1 = __importDefault(require("../models/Alert"));
 const Shift_1 = __importDefault(require("../models/Shift"));
 const unitConverter_1 = require("../utils/unitConverter");
+const notificationService_1 = require("../services/notificationService");
 // @desc    Record hourly sales and deduct raw materials with unit conversion & alerts
 // @route   POST /api/sales/hourly
 // @access  Private
@@ -57,18 +58,24 @@ const recordHourlySale = async (req, res) => {
                     const convertedUsage = (0, unitConverter_1.convertQuantity)(recipeUsageInRecipeUnit, ingredient.unit || 'g', rawMaterial.unit || 'kg');
                     rawMaterial.currentQuantity = (rawMaterial.currentQuantity || 0) - convertedUsage;
                     await rawMaterial.save();
-                    // Alert Check 1: Minimum Threshold Alert
-                    if (rawMaterial.currentQuantity < (rawMaterial.minStockAlert || 0)) {
+                    // Alert Check 1: Minimum Cart Refill Threshold Alert
+                    const cartThreshold = rawMaterial.minCartStockAlert ?? rawMaterial.minStockAlert ?? 0;
+                    if (rawMaterial.currentQuantity < cartThreshold) {
                         const existingAlert = await Alert_1.default.findOne({
                             itemId: rawMaterial._id,
                             type: 'LOW_STOCK_THRESHOLD',
                             resolved: false,
                         });
                         if (!existingAlert) {
+                            const alertMsg = `CART REFILL ALERT: ${rawMaterial.name} has fallen below cart threshold (${cartThreshold} ${rawMaterial.unit}). Current cart stock: ${rawMaterial.currentQuantity.toFixed(3)} ${rawMaterial.unit}. Please refill cart.`;
                             await Alert_1.default.create({
                                 itemId: rawMaterial._id,
                                 type: 'LOW_STOCK_THRESHOLD',
-                                message: `LOW STOCK THRESHOLD ALERT: ${rawMaterial.name} has fallen below minimum stock (${rawMaterial.minStockAlert} ${rawMaterial.unit}). Current stock: ${rawMaterial.currentQuantity.toFixed(3)} ${rawMaterial.unit}.`,
+                                message: alertMsg,
+                            });
+                            (0, notificationService_1.sendAdminPushNotification)('⚠️ Cart Refill Required!', alertMsg, {
+                                itemId: rawMaterial._id,
+                                type: 'LOW_STOCK_THRESHOLD',
                             });
                         }
                     }
@@ -83,10 +90,15 @@ const recordHourlySale = async (req, res) => {
                             resolved: false,
                         });
                         if (!existing70Alert) {
+                            const alertMsg = `70% CONSUMPTION ALERT: ${rawMaterial.name} has reached ${(usageRatio * 100).toFixed(1)}% consumption. Remaining: ${rawMaterial.currentQuantity.toFixed(3)} ${rawMaterial.unit} out of ${starting} ${rawMaterial.unit}. Replenish cart stock.`;
                             await Alert_1.default.create({
                                 itemId: rawMaterial._id,
                                 type: '70_PCT_CONSUMPTION',
-                                message: `70% CONSUMPTION ALERT: ${rawMaterial.name} has reached ${(usageRatio * 100).toFixed(1)}% consumption. Remaining: ${rawMaterial.currentQuantity.toFixed(3)} ${rawMaterial.unit} out of ${starting} ${rawMaterial.unit}. Replenish cart stock.`,
+                                message: alertMsg,
+                            });
+                            (0, notificationService_1.sendAdminPushNotification)('📊 70% Stock Consumption Warning', alertMsg, {
+                                itemId: rawMaterial._id,
+                                type: '70_PCT_CONSUMPTION',
                             });
                         }
                     }
@@ -140,10 +152,15 @@ const reconcileDailySales = async (req, res) => {
         if (!isMatched) {
             // Create Mismatch Alert
             const diff = Math.abs(hourlySalesTotal - dayTotal);
+            const alertMsg = `HOURLY VS DAY TOTAL SALES MISMATCH ALERT: Total of hourly sales (₹${hourlySalesTotal.toFixed(2)}) does not match reported total day sales (₹${dayTotal.toFixed(2)}). Discrepancy: ₹${diff.toFixed(2)}.`;
             alertObj = await Alert_1.default.create({
                 shiftId: shift._id,
                 type: 'SALES_MISMATCH',
-                message: `HOURLY VS DAY TOTAL SALES MISMATCH ALERT: Total of hourly sales (₹${hourlySalesTotal.toFixed(2)}) does not match reported total day sales (₹${dayTotal.toFixed(2)}). Discrepancy: ₹${diff.toFixed(2)}.`,
+                message: alertMsg,
+            });
+            (0, notificationService_1.sendAdminPushNotification)('🚨 Sales Discrepancy Alert!', alertMsg, {
+                shiftId: shift._id,
+                type: 'SALES_MISMATCH',
             });
         }
         res.json({

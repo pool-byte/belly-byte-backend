@@ -37,6 +37,20 @@ export interface IMaterialWasted {
   createdAt?: Date;
 }
 
+export interface IShoppingItem {
+  itemId: mongoose.Types.ObjectId;
+  name: string;
+  unit: string;
+  closingStock: number;
+  minStockAlert: number;
+  suggestedQuantity: number;
+  quantityToBuy: number;
+  unitCost: number;
+  totalCost: number;
+  vendorName: string;
+  status: 'Pending' | 'Ordered' | 'Delivered';
+}
+
 export interface IShiftReport extends Document {
   shiftId: mongoose.Types.ObjectId;
   dateString: string; // YYYY-MM-DD for easy date filtering
@@ -48,6 +62,7 @@ export interface IShiftReport extends Document {
   rawMaterialUsed: IRawMaterialUsed[];
   stockSummary: IStockSummary[];
   materialWasted: IMaterialWasted[];
+  shoppingList: IShoppingItem[];
   totalRevenue: number;
   livePhotoUrl?: string;
   closingPhotoUrl?: string;
@@ -102,6 +117,21 @@ const shiftReportSchema = new Schema<IShiftReport>(
         reason: { type: String, default: '' },
         photoUrl: { type: String },
         createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    shoppingList: [
+      {
+        itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Item' },
+        name: { type: String, required: true },
+        unit: { type: String, default: 'kg' },
+        closingStock: { type: Number, default: 0 },
+        minStockAlert: { type: Number, default: 0 },
+        suggestedQuantity: { type: Number, default: 0 },
+        quantityToBuy: { type: Number, default: 0 },
+        unitCost: { type: Number, default: 0 },
+        totalCost: { type: Number, default: 0 },
+        vendorName: { type: String, default: '' },
+        status: { type: String, enum: ['Pending', 'Ordered', 'Delivered'], default: 'Pending' },
       },
     ],
     totalRevenue: { type: Number, default: 0 },

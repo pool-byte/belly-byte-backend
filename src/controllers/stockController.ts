@@ -7,6 +7,7 @@ import Shift from '../models/Shift';
 import Alert from '../models/Alert';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { getFilePath, resolvePhotoUrl } from '../middleware/uploadMiddleware';
+import { sendAdminPushNotification } from '../services/notificationService';
 
 // @desc    Record Opening Stock (bulk or single for shift)
 // @route   POST /api/stock/opening
@@ -146,18 +147,24 @@ export const recordWastage = async (req: AuthRequest, res: Response): Promise<vo
     rawMaterial.currentQuantity = rawMaterial.currentQuantity - Number(quantity);
     await rawMaterial.save();
 
-    // Check if stock dropped below threshold
-    if (rawMaterial.currentQuantity <= rawMaterial.minStockAlert) {
+    // Check if cart stock dropped below refill threshold
+    const cartThreshold = rawMaterial.minCartStockAlert ?? rawMaterial.minStockAlert ?? 0;
+    if (rawMaterial.currentQuantity <= cartThreshold) {
       const existingAlert = await Alert.findOne({
         itemId: rawMaterial._id,
         type: 'LOW_STOCK_THRESHOLD',
         resolved: false,
       } as any);
       if (!existingAlert) {
+        const alertMsg = `CART REFILL ALERT: ${rawMaterial.name} is down to ${rawMaterial.currentQuantity.toFixed(3)} ${rawMaterial.unit} after wastage (Cart Threshold: ${cartThreshold} ${rawMaterial.unit}). Please refill cart.`;
         await Alert.create({
           itemId: rawMaterial._id,
           type: 'LOW_STOCK_THRESHOLD',
-          message: `LOW STOCK ALERT: ${rawMaterial.name} is down to ${rawMaterial.currentQuantity.toFixed(3)} ${rawMaterial.unit} after wastage (Threshold: ${rawMaterial.minStockAlert} ${rawMaterial.unit}).`,
+          message: alertMsg,
+        });
+        sendAdminPushNotification('⚠️ Cart Refill Alert (Wastage)', alertMsg, {
+          itemId: rawMaterial._id,
+          type: 'LOW_STOCK_THRESHOLD',
         });
       }
     }

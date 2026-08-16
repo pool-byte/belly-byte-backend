@@ -11,5 +11,6 @@ router.post('/login', authController_1.loginUser);
 router.post('/register', authController_1.registerUser);
 router.get('/profile', authMiddleware_1.protect, authController_1.getUserProfile);
 router.get('/me', authMiddleware_1.protect, authController_1.getUserProfile);
+router.post('/push-token', authMiddleware_1.protect, authController_1.updatePushToken);
 exports.default = router;
 //# sourceMappingURL=authRoutes.js.map

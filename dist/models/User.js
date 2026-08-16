@@ -43,6 +43,7 @@ const userSchema = new mongoose_1.Schema({
     phone: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, required: true, enum: ['Admin', 'Worker'], default: 'Worker' },
+    pushToken: { type: String, default: '' },
 }, { timestamps: true });
 userSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcryptjs_1.default.compare(enteredPassword, this.password);

@@ -6,6 +6,7 @@ export interface IUser extends Document {
   phone: string;
   password?: string;
   role: 'Admin' | 'Worker';
+  pushToken?: string;
   matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
@@ -15,6 +16,7 @@ const userSchema = new Schema<IUser>(
     phone: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, required: true, enum: ['Admin', 'Worker'], default: 'Worker' },
+    pushToken: { type: String, default: '' },
   },
   { timestamps: true }
 );

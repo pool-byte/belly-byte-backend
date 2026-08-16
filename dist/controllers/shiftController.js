@@ -249,6 +249,7 @@ const getShiftStatusAndPhotos = async (req, res) => {
                             stage: ts.type === 'Opening' ? 'Opening' : 'Closing',
                             time: ts.submittedAt ? new Date(ts.submittedAt).toLocaleTimeString() : 'N/A',
                             uri: ts.photoUrl,
+                            inputValue: ts.inputValue || '',
                         });
                     }
                 });

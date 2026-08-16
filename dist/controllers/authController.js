@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserProfile = exports.registerUser = exports.loginUser = void 0;
+exports.updatePushToken = exports.getUserProfile = exports.registerUser = exports.loginUser = void 0;
 const User_1 = __importDefault(require("../models/User"));
 const generateToken_1 = __importDefault(require("../utils/generateToken"));
 // @desc    Auth user & get token
@@ -89,6 +89,7 @@ const getUserProfile = async (req, res) => {
             name: req.user.name,
             phone: req.user.phone,
             role: req.user.role,
+            pushToken: req.user.pushToken,
         });
     }
     catch (error) {
@@ -96,4 +97,29 @@ const getUserProfile = async (req, res) => {
     }
 };
 exports.getUserProfile = getUserProfile;
+// @desc    Save or update user's Expo push token
+// @route   POST /api/auth/push-token
+// @access  Private
+const updatePushToken = async (req, res) => {
+    try {
+        const { pushToken } = req.body;
+        if (!req.user) {
+            res.status(401).json({ message: 'Not authorized' });
+            return;
+        }
+        const user = await User_1.default.findById(req.user._id);
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        user.pushToken = pushToken || '';
+        await user.save();
+        console.log(`[AUTH] Push token registered for user "${user.name}" (${user.role}): ${pushToken}`);
+        res.json({ message: 'Push token registered successfully', pushToken: user.pushToken });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error saving push token', error });
+    }
+};
+exports.updatePushToken = updatePushToken;
 //# sourceMappingURL=authController.js.map
